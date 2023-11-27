@@ -178,8 +178,10 @@ int main(void) {
     crear_arco(nodos[79],nodos[94],1.41F);
     crear_arco(nodos[79],nodos[64],1.41F);
 
-    print_arcos(64);
-    print_peso_arco(62,35);
+    for (int i = 0; i < 13; i++) {
+        print_arcos(Freire[i]);
+        printf("\n");
+    }
 }
 
 // devuelve un arreglo con secuencia de numeros start-end, incluyendo el inicio y final dentro del arreglo
@@ -217,16 +219,16 @@ void borrar_arco(Nodo* inicio, Nodo* final) {
     inicio->link = NULL; // placeholder
 }
 
-// para debugging, printea los pares ordenados/arcos que contienen a este vertice
-void print_arcos(int id) {
-    for (int i = 0; i < MAX_VERTICES; i++) {
-        if (mat_ady[id][i] != INF
-    ) printf("(%i, %i)\n", id, i);
-        if (mat_ady[i][id] != INF
-    ) printf("(%i, %i)\n", i, id);
-    }
-}
-
 void print_peso_arco(int inicio, int final) {
     printf("%f", mat_ady[inicio][final]);
 }
+
+// para debugging, printea los pares ordenados/arcos que contienen a este vertice
+// es decir, aquellos arcos que empiezen o terminen en el vertice ingresado
+void print_arcos(int id) {
+    for (int i = 0; i < MAX_VERTICES; i++) {
+        if (mat_ady[id][i] != INF) printf("(%i --(%f)--> %i),", id, mat_ady[id][i], i);
+        if (mat_ady[i][id] != INF) printf("(%i --(%f)--> %i),", i, mat_ady[i][id], id);
+    }
+}
+
