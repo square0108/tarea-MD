@@ -35,8 +35,8 @@ void print_arcos(int id);
 void print_peso_arco(int inicio, int final);
 int* numrange(int start, int end);
 int* elems_plus_one(int arr[8]);
-
-void dijkstra(int n, int matriz_adyacencia[MAX_VERTICES][MAX_VERTICES], int inicio, int final);
+void eliminar_primer_elem(int* arr, int tamano);
+int* dijkstra(int inicio, int final);
 
 /* **************************** *
  * Funciones
@@ -178,10 +178,7 @@ int main(void) {
     crear_arco(nodos[79],nodos[94],1.41F);
     crear_arco(nodos[79],nodos[64],1.41F);
 
-    for (int i = 0; i < 13; i++) {
-        print_arcos(Freire[i]);
-        printf("\n");
-    }
+    dijkstra(0, 1423);
 }
 
 // devuelve un arreglo con secuencia de numeros start-end, incluyendo el inicio y final dentro del arreglo
@@ -208,10 +205,8 @@ int* elems_plus_one(int arr[8]) {
 }
 
 void crear_arco(Nodo* inicio, Nodo* final, float peso) {
-
     mat_ady[inicio->indice][final->indice] = peso;
     inicio->link = final; // placeholder
-
 }
 
 void borrar_arco(Nodo* inicio, Nodo* final) {
@@ -232,3 +227,75 @@ void print_arcos(int id) {
     }
 }
 
+void eliminar_primer_elem(int* arr, int tamano) {
+    for (int i = 0; i < tamano-1; i++) arr[i] = arr[i+1];
+    arr[tamano-1] = -1;
+}
+
+// por ahora no devuelve nada, pero distancia es un array de MAX_VERTICES elementos con cada indice siendo la distancia
+// desde inicio hacia ese nodo
+
+// esta funcion lo que tiene que hacer es recibir indice de inicio e indice final y devolver un array de los nodos por los que pasa
+// para esto se me ocurria usar el array padre que basicamente indicaba (por ejemplo, padre[i]) "desde que nodo vino el algoritmo a i para
+// recorrer la menor distancia"
+
+// puedes hacerlo como tu quieras, pero eso es la idea que yo tenia por si te sirve
+int* dijkstra(int inicio, int final) {
+    float* distancia = malloc(sizeof(float) * MAX_VERTICES);
+    int* visto = malloc(sizeof(int) * MAX_VERTICES);
+    int* padre = malloc(sizeof(int) * MAX_VERTICES);
+    int tamanoCola = 0;
+    int* cola = calloc(MAX_VERTICES, sizeof(int));
+    for (int i = 0; i < MAX_VERTICES; i++) {
+        distancia[i] = INF;
+        visto[i] = 0;
+        padre[i] = -1;
+    }
+    distancia[inicio] = 0;
+    int nodoActual = inicio;
+    while (1) {
+        int numVerticesAdy = 0;
+        int listaAdy[GRADO_MAXIMO];
+        for (int i = 0; i < MAX_VERTICES; i++) {
+            if (mat_ady[nodoActual][i] != INF && !visto[i]) {
+                listaAdy[numVerticesAdy] = i;
+                numVerticesAdy++;
+                int enCola = 0;
+                for (int j = 0; j < tamanoCola; j++) {
+                    if (cola[j] == i) enCola = 1;
+                }
+                if (!enCola) {
+                    cola[tamanoCola] = i;
+                    tamanoCola++;
+                }
+            }
+        }
+        for (int i = 0; i < numVerticesAdy; i++) {
+            int nodoSig = listaAdy[i];
+            if (distancia[nodoSig] > distancia[nodoActual] + mat_ady[nodoActual][nodoSig]) {
+                distancia[nodoSig] = distancia[nodoActual] + mat_ady[nodoActual][nodoSig];
+                padre[nodoSig] = nodoActual;
+            }
+        }
+        visto[nodoActual] = 1;
+        if (tamanoCola != 0) {
+            nodoActual = cola[0];
+            eliminar_primer_elem(cola, tamanoCola);
+            tamanoCola--;
+        } else break;
+    }
+    int graphPos = 0;
+    int count = 0;
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 14; j++) {
+            if (count != 35 && count != 50) {
+                printf("%02.0f ", distancia[graphPos]);
+                graphPos++;
+            } else {
+                printf("   ");
+            }
+            count++;
+        }
+        printf("\n");
+    }
+}
