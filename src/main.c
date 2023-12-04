@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /* **************************** *
  * Constantes
 ******************************* */
 
 // Numero total de vertices en el grafo del Centro Concepcion
-#define MAX_VERTICES 110
+#define MAX_VERTICES 112
 #define GRADO_MAXIMO 6
 
 // Distancia infinita
@@ -15,6 +16,20 @@
 // Matriz de adyacencia
 float mat_ady[MAX_VERTICES][MAX_VERTICES];
 
+// Enums de las calles
+enum calles_horizontales {
+    LOS_CARRERA,MAIPU,FREIRE,BARROS_ARANA,OHIGGINS,SAN_MARTIN,COCHRANE,CHACABUCO
+};
+
+enum calles_verticales {
+    ARTURO_PRAT,SERRANO,SALAS,ANGOL,LINCOYAN,RENGO,CAUPOLICAN,ANIBAL_PINTO,COLOCOLO,CASTELLON,TUCAPEL,OROMPELLO,ONGOLMO,PAICAVI
+};
+
+// Arreglos con los nombres de las calles (para asignar strings a los nodos)
+char* CallesH[] = {"Los Carrera","Maipu","Freire","Barros Arana","O'Higgins","SanMartin","Cochrane","Chacabuco"};
+char* CallesV[] = {"Arturo Prat", "Serrano", "Salas", "Angol", "Lincoyan", "Rengo", "Caupolican", "Anibal Pinto", "Colo colo", "Castellon", "Tucapel", "Orompello", "Ongolmo", "Paicavi"};
+
+
 /* **************************** *
  * Structs y enums
 ******************************* */
@@ -22,19 +37,23 @@ float mat_ady[MAX_VERTICES][MAX_VERTICES];
 typedef struct nodo
 {
     int indice;
-    struct nodo* link; // lista de nodos al que esta instancia de nodo apunta
+    char* calles_pertenecientes[3];
+    struct nodo* link; // probablemente saque esto, no es utilizado
 }Nodo;
 
 /* **************************** *
  * Prototipos
 ******************************* */
 
-void crear_arco(Nodo* inicio, Nodo* final, float peso);
-void borrar_arco(Nodo* inicio, Nodo* final);
-void print_arcos(int id);
-void print_peso_arco(int inicio, int final);
-int* numrange(int start, int end);
+void crear_arco(float mat_ady[MAX_VERTICES][MAX_VERTICES], Nodo* inicio, Nodo* final, float peso);
+void borrar_arco(float mat_ady[MAX_VERTICES][MAX_VERTICES], Nodo* inicio, Nodo* final);
+void print_arcos(float mat_ady[MAX_VERTICES][MAX_VERTICES], int id);
+void print_arcos(float mat_ady[MAX_VERTICES][MAX_VERTICES], int id);
+void set_calle_vert_perteneciente(Nodo* node_ar[MAX_VERTICES], int calle, int id_vertice, int id_StrArrayStructMem);
+void set_calle_hori_perteneciente(Nodo* node_ar[MAX_VERTICES], int calle, int id_vertice, int id_StrArrayStructMem);
+void numrange(int* array, int start, int end);
 int* elems_plus_one(int arr[8]);
+
 void eliminar_primer_elem(int* arr, int tamano);
 int* dijkstra(int inicio, int final);
 int* dijkstraCondicionado(int inicio, int final, int pasandoPor);
@@ -45,39 +64,60 @@ void reverse(int* arr, int n);
 ******************************* */
 
 int main(void) {
-    // calles "horizontales", todas son largo 14, menos Freire y Barros Arana.
-    int* Carrera = numrange(0,13);
-    int* Maipu = numrange(14,27);
-    int* Freire = numrange(28,40);
-    int* BarrosArana = numrange(41,53);
-    int* OHiggins = numrange(54,67);
-    int* SanMartin = numrange(68,81);
-    int* COCKrane = numrange(82,95);
-    int* Chacabuco = numrange(96,109);
-
-    // calles "verticales", todas son largo 8, menos Anibal Pinto, Colo Colo.
-    int Prat[] = {0,14,28,41,54,68,82,96};
-    int* Serrano = elems_plus_one(Prat);
-    int* Salas = elems_plus_one(Serrano);
-    int* Angol = elems_plus_one(Salas);
-    int* Lincoyan = elems_plus_one(Angol);
-    int* Rengo = elems_plus_one(Lincoyan);
-    int* Caupolican = elems_plus_one(Rengo);
-    int AnibalPinto[] = {7,21,48,61,75,89,103};
-    int ColoColo[] = {8,22,35,62,76,90,104};
-    int Castellon[] = {9,23,36,49,63,77,91,105};
-    int* Tucapel = elems_plus_one(Castellon);
-    int* Orompello = elems_plus_one(Tucapel);
-    int* Ongolmo = elems_plus_one(Orompello);
-    int* Paicavi = elems_plus_one(Ongolmo);
-
     Nodo* nodos[MAX_VERTICES];
-    int* CallesHorizontales[] = {Carrera, Maipu, Freire, BarrosArana, OHiggins, SanMartin, COCKrane, Chacabuco};
-    int* CallesVerticales[] = {Prat, Serrano, Salas, Angol, Lincoyan, Rengo, Caupolican, AnibalPinto, ColoColo, Castellon, Tucapel, Orompello, Ongolmo, Paicavi};
 
-    // inicializacion de los nodos, los deje como struct en caso de algun momento tener que usarlos como tal?
+    // inicializacion de todas las distancias a infinito (inicialmente ningun nodo conectado)
+    for (int i = 0; i < MAX_VERTICES; i++) {
+        for (int j = 0; j < MAX_VERTICES; j++) {
+            mat_ady[i][j] = INF;
+        }
+    }
+
+    // calles "horizontales", todas son largo 14
+    int Carrera[14];
+    int Maipu[14];
+    int Freire[14];
+    int BarrosArana[14];
+    int OHiggins[14];
+    int SanMartin[14];
+    int Cochrane[14];
+    int Chacabuco[14];
+
+    int* CallesHorizontales[] = {Carrera, Maipu, Freire, BarrosArana, OHiggins, SanMartin, Cochrane, Chacabuco};
+    int start_index[] = {0,14,28,42,56,70,84,98};
+    for (int i = 0; i < 8; i++) {
+        // esta funcion solo inicializa los valores de cada arreglo a numeros en un rango, incluyendo inicio y final del rango
+        numrange(CallesHorizontales[i], start_index[i], start_index[i]+13);
+    }
+
+    // calles "verticales", todas son largo 8
+    int Prat[] = {0,14,28,42,56,70,84,98};
+    int Serrano[8];
+    int Salas[8]; 
+    int Angol[8]; 
+    int Lincoyan[8];
+    int Rengo[8];
+    int Caupolican[8];
+    int AnibalPinto[8];
+    int ColoColo[8];
+    int Castellon[8];
+    int Tucapel[8];
+    int Orompello[8];
+    int Ongolmo[8];
+    int Paicavi[8];
+
+    int* CallesVerticales[] = {Prat, Serrano, Salas, Angol, Lincoyan, Rengo, Caupolican, AnibalPinto, ColoColo, Castellon, Tucapel, Orompello, Ongolmo, Paicavi};
+    for (int i = 1; i < 14; i++) {
+        // los índices de cada calle vertical son los mismos índices de la calle vertical anterior a esta, pero +1
+        CallesVerticales[i] = elems_plus_one(CallesVerticales[i-1]);
+    }
+
+    // inicializacion de los nodos, los dejé como struct en caso de tener que usarlos asi en algun momento?
     for (int i = 0; i < MAX_VERTICES; i++) {
         nodos[i] = malloc(sizeof(Nodo));
+        nodos[i]->calles_pertenecientes[0] = malloc(sizeof(char)*32);
+        nodos[i]->calles_pertenecientes[1] = malloc(sizeof(char)*32);
+        nodos[i]->calles_pertenecientes[2] = malloc(sizeof(char)*32);
         (nodos[i])->indice = i;
         nodos[i]->link = NULL;
 
@@ -87,99 +127,164 @@ int main(void) {
     }
 
 
-    // conectando los vertices calle por calle
-    // primero, todas las calles horizontales
-    for (int indiceCalle = 0; indiceCalle < 8; indiceCalle++) {
-        for (int indiceNodo = 0; indiceNodo < 13; indiceNodo++) {
-            // las calles Carrera, Freire, OHiggins... ("indice par"), van de derecha-izquierda
-            // por ahora solo crear el grafo uniformemente, y luego con la funcion borrar_arco
-            // ocuparnos de los nodos "especiales"
+    /* Se conectan los vertices calle por calle mediante un "patrón" donde se crean arcos todos en la misma dirección entre cada par de vertices adyacentes de una calle, luego en direccion opuesta en la calle siguiente, etc...
 
-            // calles con solo 13 nodos en vez de 14
-            if ((CallesHorizontales[indiceCalle] == Freire || CallesHorizontales[indiceCalle] == BarrosArana)
-            && indiceNodo == 12) {
-                continue;
+    1. Las calles del arreglo CallesHorizontales[] con índice PAR en este arreglo, van de derecha a izquierda, las IMPARES de izquierda a derecha. (salvo por las avenidas en cada extremo)
+    2. Las calles del arreglo CallesVerticales[] con índice PAR en este arreglo, van de abajo a arriba, las IMPARES de arriba a abajo. (salvo por Paicaví)
+    3. Los casos que se salgan del patrón son manejados en un switch dentro de cada for-loop.
+    
+    */
+
+    // primero, todas las CALLES HORIZONTALES
+    for (int id_calle = 0; id_calle < 8; id_calle++) {
+        int* calle_actual = CallesHorizontales[id_calle]; // para legibilidad
+
+        for (int posicion_nodo = 0; posicion_nodo < 13; posicion_nodo++) {
+            int numero_nodo = calle_actual[posicion_nodo]; // para legibilidad
+
+            // Funcion que unicamente asigna una string con el nombre de la calle al nodo actual.
+            set_calle_hori_perteneciente(nodos, id_calle, numero_nodo, 0);
+            // Este if es para no saltarse la asignacion de string en la ultima calle del array de calles horizontales
+            if (posicion_nodo == 12) {
+                set_calle_hori_perteneciente(nodos, id_calle, calle_actual[posicion_nodo+1], 0);
             }
-            // calles con bidireccion: Carrera, Chacabuco
-            if ((CallesHorizontales[indiceCalle] == Carrera || CallesHorizontales[indiceCalle] == Chacabuco)) {
+            // Switch utilizado para manejar casos excepcion
+            switch (id_calle) {
+                case LOS_CARRERA:
+                    // esta calle tiene bidireccion, por lo tanto:
+
+                    // arco derecha-izquierda
+                    crear_arco(
+                        mat_ady,
+                        nodos[calle_actual[posicion_nodo+1]],
+                        nodos[calle_actual[posicion_nodo]],
+                        1);
+                    // archo izquierda-derecha
+                    crear_arco(
+                        mat_ady,
+                        nodos[calle_actual[posicion_nodo]],
+                        nodos[calle_actual[posicion_nodo+1]],
+                        1);
+                    continue;
+                case BARROS_ARANA:
+                    switch (numero_nodo) {
+                        case 49:
+                            continue;
+                        case 50:
+                            continue;
+                        default:
+                            break;
+                    }
+                    break;
+                case COCHRANE:
+                    // no estoy seguro del sentido de esta calle en 96-97?
+                    if (numero_nodo == 96) {
+                        crear_arco(mat_ady, nodos[96], nodos[97], 1);
+                        continue;
+                    }
+                    break;
+                case CHACABUCO:
+                    // esta calle tiene bidireccion, por lo tanto:
+
+                    // arco derecha-izquierda
+                    crear_arco(
+                        mat_ady,
+                        nodos[calle_actual[posicion_nodo+1]],
+                        nodos[calle_actual[posicion_nodo]],
+                        1);
+                    // archo izquierda-derecha
+                    crear_arco(
+                        mat_ady,
+                        nodos[calle_actual[posicion_nodo]],
+                        nodos[calle_actual[posicion_nodo+1]],
+                        1);
+                    // continue ya que no hay calles por debajo de esta para conectar verticalmente
+                    continue;
+                default:
+                    break;
+            }
+
+            if (id_calle%2 == 0) {
                 // arco derecha-izquierda
                 crear_arco(
-                    nodos[(CallesHorizontales[indiceCalle])[indiceNodo+1]],
-                    nodos[(CallesHorizontales[indiceCalle])[indiceNodo]],
-                    1);
-                // archo izquierda-derecha
-                crear_arco(
-                    nodos[(CallesHorizontales[indiceCalle])[indiceNodo]],
-                    nodos[(CallesHorizontales[indiceCalle])[indiceNodo+1]],
-                    1);
-                continue;
-            }
-
-            if (indiceCalle%2 == 0) {
-                // arco derecha-izquierda
-                crear_arco(
-                    nodos[(CallesHorizontales[indiceCalle])[indiceNodo+1]],
-                    nodos[(CallesHorizontales[indiceCalle])[indiceNodo]],
+                    mat_ady,
+                    nodos[calle_actual[posicion_nodo+1]],
+                    nodos[calle_actual[posicion_nodo]],
                     1);
             }
             else {
                 // arco izquierda-derecha
                 crear_arco(
-                    nodos[(CallesHorizontales[indiceCalle])[indiceNodo]],
-                    nodos[(CallesHorizontales[indiceCalle])[indiceNodo+1]],
+                    mat_ady,
+                    nodos[calle_actual[posicion_nodo]],
+                    nodos[calle_actual[posicion_nodo+1]],
                     1);
             }
         }
     }
-    // luego, todas las calles verticales
-    for (int indiceCalle = 0; indiceCalle < 14; indiceCalle++) {
-        for (int indiceNodo = 0; indiceNodo < 7; indiceNodo++) {
-            if ((CallesVerticales[indiceCalle] == AnibalPinto 
-            || CallesVerticales[indiceCalle] == ColoColo)
-            && indiceNodo == 6) {
-                continue;
+    
+    // luego, todas las CALLES VERTICALES
+    for (int id_calle = 0; id_calle < 14; id_calle++) {
+        int* calle_actual = CallesVerticales[id_calle]; // para legibilidad
+
+        for (int posicion_nodo = 0; posicion_nodo < 7; posicion_nodo++) {
+            int numero_nodo = calle_actual[posicion_nodo]; // para legibilidad
+            
+            // Funcion que unicamente asigna una string con el nombre de la calle al nodo actual.
+            set_calle_vert_perteneciente(nodos, id_calle, numero_nodo, 1);
+            // Este if es para no saltarse la asignacion de string en la ultima calle del array de calles verticales
+            if (posicion_nodo == 6) {
+                set_calle_vert_perteneciente(nodos, id_calle, calle_actual[posicion_nodo+1], 1);
             }
-            if (indiceCalle%2 == 0) {
+
+            switch (id_calle) {
+                case ANIBAL_PINTO:
+                    if (numero_nodo == 21 || numero_nodo == 35) {
+                        continue;
+                    }
+                    break;
+                case PAICAVI:
+                    if (numero_nodo >= 13 && numero_nodo <= 55) {
+                        crear_arco(mat_ady,nodos[calle_actual[posicion_nodo+1]],nodos[calle_actual[posicion_nodo]],1);
+                        crear_arco(mat_ady,nodos[calle_actual[posicion_nodo]],nodos[calle_actual[posicion_nodo+1]],1);
+                        continue;
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            if (id_calle%2 == 0) {
                 // arco de abajo a arriba
                 crear_arco(
-                    nodos[(CallesVerticales[indiceCalle])[indiceNodo+1]],
-                    nodos[(CallesVerticales[indiceCalle])[indiceNodo]],
+                    mat_ady,
+                    nodos[calle_actual[posicion_nodo+1]],
+                    nodos[calle_actual[posicion_nodo]],
                     1);
             }
             else {
                 // arco de arriba a abajo
                 crear_arco(
-                    nodos[(CallesVerticales[indiceCalle])[indiceNodo]],
-                    nodos[(CallesVerticales[indiceCalle])[indiceNodo+1]],
+                    mat_ady,
+                    nodos[calle_actual[posicion_nodo]],
+                    nodos[calle_actual[posicion_nodo+1]],
                     1);
             }
         }
+
+        calle_actual = NULL;
     }
+    // Por ultimo, se agrega la diagonal
+    crear_arco(mat_ady, nodos[81], nodos[66], 2);
+    crear_arco(mat_ady, nodos[81], nodos[96], 2);
+    crear_arco(mat_ady, nodos[96], nodos[81], 2);
+    crear_arco(mat_ady, nodos[96], nodos[111], 2);
+    crear_arco(mat_ady, nodos[111], nodos[96], 2);
+    strcpy(nodos[81]->calles_pertenecientes[2], "Pedro Aguirre Cerda");
+    strcpy(nodos[96]->calles_pertenecientes[2], "Pedro Aguirre Cerda");
+    strcpy(nodos[111]->calles_pertenecientes[2], "Pedro Aguirre Cerda");
 
-    // hasta aqui el grafo es solo cuadras regulares. Ahora hay que remover/arreglar arcos.
-
-    // 35-(2)->34: 
-    borrar_arco(nodos[35], nodos[34]);
-    crear_arco(nodos[35],nodos[34],2);
-    // borrar 21-48
-    borrar_arco(nodos[21],nodos[48]);
-    // 62-(2)->35:
-    borrar_arco(nodos[62],nodos[35]);
-    crear_arco(nodos[62],nodos[35],2);
-    // borrar 48->49
-    borrar_arco(nodos[48],nodos[49]);
-    // agregar direcciones faltantes a Paicavi (hasta ahora va solo en direccion arriba-abajo)
-    crear_arco(nodos[67],nodos[53],1);
-    crear_arco(nodos[53],nodos[40],1);
-    crear_arco(nodos[40],nodos[27],1);
-    crear_arco(nodos[27],nodos[13],1);
-    // agregar la diagonal
-    crear_arco(nodos[109],nodos[94],1.41F);
-    crear_arco(nodos[94],nodos[109],1.41F);
-    crear_arco(nodos[94],nodos[79],1.41F);
-    crear_arco(nodos[79],nodos[94],1.41F);
-    crear_arco(nodos[79],nodos[64],1.41F);
-
+    /* Aqui termina la inicializacion de la matriz */
 
     int desde = 1;
     int hasta = 2;
@@ -203,16 +308,12 @@ int main(void) {
 }
 
 // devuelve un arreglo con secuencia de numeros start-end, incluyendo el inicio y final dentro del arreglo
-int* numrange(int start, int end) {
-    int sum = 0;
-    for (int i = start; i <= end; i++) {
-        sum++;
+void numrange(int* array, int start, int end) {
+    int value = start;
+    for (int i = 0; i <= end-start; i++) {
+        array[i] = value;
+        value++;
     }
-    int* ar = malloc(sizeof(int)*sum);
-    for (int i = 0; i < sum; i++) {
-        ar[i] = start+i;
-    }
-    return ar;
 }
 
 // devuelve un arreglo, que es igual al arreglo de entrada, pero sumando 1 a todos sus valores
@@ -225,23 +326,32 @@ int* elems_plus_one(int arr[8]) {
     return ray;
 }
 
-void crear_arco(Nodo* inicio, Nodo* final, float peso) {
-    mat_ady[inicio->indice][final->indice] = peso;
-    inicio->link = final; // placeholder
+void set_calle_hori_perteneciente(Nodo* node_ar[MAX_VERTICES], int calle, int id_vertice, int id_StrArrayStructMem) {
+    strcpy(node_ar[id_vertice]->calles_pertenecientes[id_StrArrayStructMem], CallesH[calle]);
 }
 
-void borrar_arco(Nodo* inicio, Nodo* final) {
+void set_calle_vert_perteneciente(Nodo* node_ar[MAX_VERTICES], int calle, int id_vertice, int id_StrArrayStructMem) {
+    strcpy(node_ar[id_vertice]->calles_pertenecientes[id_StrArrayStructMem], CallesV[calle]);
+}
+
+void crear_arco(float mat_ady[MAX_VERTICES][MAX_VERTICES], Nodo* inicio, Nodo* final, float peso) {
+    mat_ady[inicio->indice][final->indice] = peso;
+    inicio->link = final; // placeholder
+
+}
+
+void borrar_arco(float mat_ady[MAX_VERTICES][MAX_VERTICES], Nodo* inicio, Nodo* final) {
     mat_ady[inicio->indice][final->indice] = INF;
     inicio->link = NULL; // placeholder
 }
 
-void print_peso_arco(int inicio, int final) {
+void print_peso_arco(float mat_ady[MAX_VERTICES][MAX_VERTICES], int inicio, int final) {
     printf("%f", mat_ady[inicio][final]);
 }
 
 // para debugging, printea los pares ordenados/arcos que contienen a este vertice
 // es decir, aquellos arcos que empiezen o terminen en el vertice ingresado
-void print_arcos(int id) {
+void print_arcos(float mat_ady[MAX_VERTICES][MAX_VERTICES], int id) {
     for (int i = 0; i < MAX_VERTICES; i++) {
         if (mat_ady[id][i] != INF) printf("(%i --(%f)--> %i),", id, mat_ady[id][i], i);
         if (mat_ady[i][id] != INF) printf("(%i --(%f)--> %i),", i, mat_ady[i][id], id);
