@@ -37,6 +37,7 @@ int* numrange(int start, int end);
 int* elems_plus_one(int arr[8]);
 void eliminar_primer_elem(int* arr, int tamano);
 int* dijkstra(int inicio, int final);
+int* dijkstraCondicionado(int inicio, int final, int pasandoPor);
 void reverse(int* arr, int n);
 
 /* **************************** *
@@ -179,12 +180,26 @@ int main(void) {
     crear_arco(nodos[79],nodos[94],1.41F);
     crear_arco(nodos[79],nodos[64],1.41F);
 
-    int* recorridoMasCorto = dijkstra(0, 109);
+
+    int desde = 1;
+    int hasta = 2;
+    int pasandoPor = 104;
+
+   printf("Camino mas corto desde %d a %d: ", desde, hasta);  
+    int* recorridoMasCorto = dijkstra(desde, hasta);
     for (int i = 0; i < MAX_VERTICES; i++) {
-        if (recorridoMasCorto[i] != 0 || i == 0) {
-           printf("%d ", recorridoMasCorto[i]);
-        } 
+        if (recorridoMasCorto[i] != -1){
+            printf("%d ", recorridoMasCorto[i]);
+        } else break;
+    } 
+    printf("\nCamino mas corto desde %d a %d pasando por %d: ", desde, hasta, pasandoPor);  
+       int* recorridoMasCorto2 = dijkstraCondicionado(desde, hasta, pasandoPor);
+    for (int i = 0; i < MAX_VERTICES; i++) {
+        if (recorridoMasCorto2[i] != -1){
+            printf("%d ", recorridoMasCorto2[i]);
+        } else break;
     }
+  
 }
 
 // devuelve un arreglo con secuencia de numeros start-end, incluyendo el inicio y final dentro del arreglo
@@ -238,8 +253,7 @@ void eliminar_primer_elem(int* arr, int tamano) {
     arr[tamano-1] = -1;
 }
 
-void reverse(int* arr, int n)
-{
+void reverse(int* arr, int n) {
     int aux[n];
     for (int i = 0; i < n; i++) aux[n-1-i] = arr[i];
     for (int i = 0; i < n; i++) arr[i] = aux[i];
@@ -253,7 +267,7 @@ void reverse(int* arr, int n)
 
 // puedes hacerlo como tu quieras, pero eso es la idea que yo tenia por si te sirve
 int* dijkstra(int inicio, int final) {
-    int* recorrido = malloc(sizeof(float) * MAX_VERTICES);
+    int* recorrido = malloc(sizeof(int) * MAX_VERTICES);
     float* distancia = malloc(sizeof(float) * MAX_VERTICES);
     int* visto = malloc(sizeof(int) * MAX_VERTICES);
     int* padre = malloc(sizeof(int) * MAX_VERTICES);
@@ -297,6 +311,7 @@ int* dijkstra(int inicio, int final) {
             tamanoCola--;
         } else break;
     }
+    /*
     int graphPos = 0;
     int count = 0;
     for (int i = 0; i < 8; i++) {
@@ -311,17 +326,46 @@ int* dijkstra(int inicio, int final) {
         }
         printf("\n");
     }
-    recorrido[0] = final;
-    int pasos = 1;
+    */
+    recorrido[0] = -1;
+    recorrido[1] = final;
     int padreAnterior = padre[final];
-    while (1){
-       if (padreAnterior != -1){
-        recorrido[pasos] = padreAnterior;
-        padreAnterior = padre[padreAnterior];
-        pasos++;
-       } else break;
+    int pasos = 1;
+    for (int i = 2; i < MAX_VERTICES; i++) {
+        if (padreAnterior != -1){
+            recorrido[i] = padreAnterior;
+            padreAnterior = padre[padreAnterior];
+            pasos++;
+        } else{
+            pasos++;
+            break;
+        } 
     }
     reverse(recorrido,pasos);
 
+    return recorrido;
+}
+
+int* dijkstraCondicionado(int inicio, int final, int pasandoPor){
+    int* recorrido = malloc(sizeof(int) * MAX_VERTICES);
+    int* tramo1 = dijkstra(inicio, pasandoPor);
+    int* tramo2 = dijkstra(pasandoPor, final);
+    int pasos = 0;
+    for (int i = 0; i < MAX_VERTICES; i++) {
+        if (tramo1[i] != -1) {
+            recorrido[pasos] = tramo1[i];
+            pasos++;
+        } else break;
+    }
+    for (int i = 0; i < MAX_VERTICES; i++) {
+        if (tramo2[i] != -1) {
+            recorrido[pasos-1] = tramo2[i];
+            pasos++;
+        } else{
+            recorrido[pasos-1] = -1;
+            break;
+        }
+            
+    }
     return recorrido;
 }
