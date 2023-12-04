@@ -37,6 +37,7 @@ int* numrange(int start, int end);
 int* elems_plus_one(int arr[8]);
 void eliminar_primer_elem(int* arr, int tamano);
 int* dijkstra(int inicio, int final);
+void reverse(int* arr, int n);
 
 /* **************************** *
  * Funciones
@@ -178,7 +179,12 @@ int main(void) {
     crear_arco(nodos[79],nodos[94],1.41F);
     crear_arco(nodos[79],nodos[64],1.41F);
 
-    dijkstra(0, 1423);
+    int* recorridoMasCorto = dijkstra(0, 109);
+    for (int i = 0; i < MAX_VERTICES; i++) {
+        if (recorridoMasCorto[i] != 0 || i == 0) {
+           printf("%d ", recorridoMasCorto[i]);
+        } 
+    }
 }
 
 // devuelve un arreglo con secuencia de numeros start-end, incluyendo el inicio y final dentro del arreglo
@@ -232,6 +238,12 @@ void eliminar_primer_elem(int* arr, int tamano) {
     arr[tamano-1] = -1;
 }
 
+void reverse(int* arr, int n)
+{
+    int aux[n];
+    for (int i = 0; i < n; i++) aux[n-1-i] = arr[i];
+    for (int i = 0; i < n; i++) arr[i] = aux[i];
+}
 // por ahora no devuelve nada, pero distancia es un array de MAX_VERTICES elementos con cada indice siendo la distancia
 // desde inicio hacia ese nodo
 
@@ -241,6 +253,7 @@ void eliminar_primer_elem(int* arr, int tamano) {
 
 // puedes hacerlo como tu quieras, pero eso es la idea que yo tenia por si te sirve
 int* dijkstra(int inicio, int final) {
+    int* recorrido = malloc(sizeof(float) * MAX_VERTICES);
     float* distancia = malloc(sizeof(float) * MAX_VERTICES);
     int* visto = malloc(sizeof(int) * MAX_VERTICES);
     int* padre = malloc(sizeof(int) * MAX_VERTICES);
@@ -298,4 +311,17 @@ int* dijkstra(int inicio, int final) {
         }
         printf("\n");
     }
+    recorrido[0] = final;
+    int pasos = 1;
+    int padreAnterior = padre[final];
+    while (1){
+       if (padreAnterior != -1){
+        recorrido[pasos] = padreAnterior;
+        padreAnterior = padre[padreAnterior];
+        pasos++;
+       } else break;
+    }
+    reverse(recorrido,pasos);
+
+    return recorrido;
 }
