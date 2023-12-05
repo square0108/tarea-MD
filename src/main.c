@@ -348,6 +348,13 @@ int main(int argc, char *argv[]) {
             }
 
             // Aproxima el numnero de inmueble ingresado a un múltiplo de 100, si es que el número cae en la mitad de una calle y no en una intersección.
+            char safe_string[32];
+            safe_string[0] = '\0';
+            char string_cpy_inmuebles[32];
+            string_cpy_inmuebles[0] = '\0';
+
+            
+
             int inmueble_aprox = aproximar_inmueble(extraer_numero_inmueble(argv[N]), tipo_calle);
             for (int i = 0; i < MAX_VERTICES; i++) {
                 if (strcmp(nodos[i]->calles_pertenecientes[tipo_calle], nombre_calle_ingresado) == 0 && inmueble_aprox == nodos[i]->inmuebles[tipo_calle]) {
@@ -547,8 +554,7 @@ int extraer_numero_inmueble(char* str) {
             str_num_inmueble[var_a] = str[var_b];
             var_a++;
         }
-        if (isdigit(str[var_b] != 0) && (isdigit(str[var_b+1] == 0))){
-            str_num_inmueble[var_a] = '\0';
+        if (isdigit(str[var_b] != 0) && (!isdigit(str[var_b+1]))){
             break;
         }
         var_b++;
@@ -558,6 +564,8 @@ int extraer_numero_inmueble(char* str) {
             return -1;
         }
     }
+    str_num_inmueble[var_a] = '\0';
+
     int returnval = atoi(str_num_inmueble);
     // printf("inmueble extraido: %i\n", returnval);
     free(str_num_inmueble);
