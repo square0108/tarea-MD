@@ -39,8 +39,8 @@ char* strings_CallesH[] = {"Los Carrera","Maipu","Freire","Barros Arana","O'Higg
 char* strings_CallesV[] = {"Arturo Prat", "Serrano", "Salas", "Angol", "Lincoyan", "Rengo", "Caupolican", "Anibal Pinto", "Colo colo", "Castellon", "Tucapel", "Orompello", "Ongolmo", "Paicavi"};
 
 int inmuebles_hori[] = {0,100,200,300,400,500,600,700,800,900,1000,1100,1200,1300};
-int inmuebles_vert[] = {700,600,500,400,300,200,100,0};
-int inmuebles_diag[] = {400,300,200,100};
+int inmuebles_vert[] = {799,700,600,500,400,300,200,100};
+int inmuebles_diag[] = {399,300,200,100};
 
 /* **************************** *
  * Structs y enums
@@ -50,8 +50,10 @@ typedef struct nodo
 {
     int indice;
     char* calles_pertenecientes[3];
-    struct nodo* link; // probablemente saque esto, no es utilizado
+    int inmuebles[3];
 }Nodo;
+
+Nodo* nodos[MAX_VERTICES];
 
 /* **************************** *
  * Prototipos
@@ -59,8 +61,6 @@ typedef struct nodo
 
 void crear_arco(float mat_ady[MAX_VERTICES][MAX_VERTICES], Nodo* inicio, Nodo* final, float peso);
 void borrar_arco(float mat_ady[MAX_VERTICES][MAX_VERTICES], Nodo* inicio, Nodo* final);
-void print_arcos(float mat_ady[MAX_VERTICES][MAX_VERTICES], int id);
-void print_arcos(float mat_ady[MAX_VERTICES][MAX_VERTICES], int id);
 void set_calle_vert_perteneciente(Nodo* node_ar[MAX_VERTICES], int calle, int id_vertice, int id_StrArrayStructMem);
 void set_calle_hori_perteneciente(Nodo* node_ar[MAX_VERTICES], int calle, int id_vertice, int id_StrArrayStructMem);
 void numrange(int* array, int start, int end);
@@ -70,19 +70,17 @@ void eliminar_primer_elem(int* arr, int tamano);
 int* dijkstra(int inicio, int final);
 int* dijkstraCondicionado(int inicio, int final, int pasandoPor);
 void reverse(int* arr, int n);
-void dijkstra_print(int desde, int hasta, int pasandoPor);
+void dijkstra_print(int desde, int hasta, int pasandoPor, char* argv[]);
 
 void copiar_nombre_ingresado(char destino[32], char* original);
 int extraer_numero_inmueble(char* str);
-int aproximar_inmueble(int num_inmueble, int* array_inmuebles, int tipo_calle);
-int inmueble_a_nodo(int inmueble, int* array_calle, int tipo_calle);
+int aproximar_inmueble(int num_inmueble, int tipo_calle);
 
 /* **************************** *
  * Funciones
 ******************************* */
 
 int main(int argc, char *argv[]) {
-    Nodo* nodos[MAX_VERTICES];
 
     // inicializacion de todas las distancias a infinito (inicialmente ningun nodo conectado)
     for (int i = 0; i < MAX_VERTICES; i++) {
@@ -92,14 +90,7 @@ int main(int argc, char *argv[]) {
     }
 
     // calles "horizontales", todas son largo 14
-    int Carrera[14];
-    int Maipu[14];
-    int Freire[14];
-    int BarrosArana[14];
-    int OHiggins[14];
-    int SanMartin[14];
-    int Cochrane[14];
-    int Chacabuco[14];
+    int Carrera[14], Maipu[14], Freire[14], BarrosArana[14], OHiggins[14], SanMartin[14], Cochrane[14], Chacabuco[14];
 
     int* CallesHorizontales[] = {Carrera, Maipu, Freire, BarrosArana, OHiggins, SanMartin, Cochrane, Chacabuco};
     int start_index[] = {0,14,28,42,56,70,84,98};
@@ -109,20 +100,8 @@ int main(int argc, char *argv[]) {
     }
 
     // calles "verticales", todas son largo 8
-    int Prat[] = {0,14,28,42,56,70,84,98};
-    int Serrano[8];
-    int Salas[8]; 
-    int Angol[8]; 
-    int Lincoyan[8];
-    int Rengo[8];
-    int Caupolican[8];
-    int AnibalPinto[8];
-    int ColoColo[8];
-    int Castellon[8];
-    int Tucapel[8];
-    int Orompello[8];
-    int Ongolmo[8];
-    int Paicavi[8];
+    int Prat[] = {0,14,28,42,56,70,84,98}; 
+    int Serrano[8], Salas[8],  Angol[8],  Lincoyan[8], Rengo[8], Caupolican[8], AnibalPinto[8], ColoColo[8], Castellon[8], Tucapel[8], Orompello[8], Ongolmo[8], Paicavi[8];
 
     int* CallesVerticales[] = {Prat, Serrano, Salas, Angol, Lincoyan, Rengo, Caupolican, AnibalPinto, ColoColo, Castellon, Tucapel, Orompello, Ongolmo, Paicavi};
     for (int i = 1; i < 14; i++) {
@@ -133,11 +112,11 @@ int main(int argc, char *argv[]) {
     // inicializacion de los nodos, los dejé como struct en caso de tener que usarlos asi en algun momento?
     for (int i = 0; i < MAX_VERTICES; i++) {
         nodos[i] = malloc(sizeof(Nodo));
-        nodos[i]->calles_pertenecientes[0] = malloc(sizeof(char)*32);
-        nodos[i]->calles_pertenecientes[1] = malloc(sizeof(char)*32);
-        nodos[i]->calles_pertenecientes[2] = malloc(sizeof(char)*32);
+        for (int k = 0; k < 3; k++) {
+            nodos[i]->calles_pertenecientes[k] = malloc(sizeof(char)*32);
+            nodos[i]->inmuebles[k] = -1;
+        }
         (nodos[i])->indice = i;
-        nodos[i]->link = NULL;
 
         for (int j = 0; j < MAX_VERTICES; j++) {
             mat_ady[i][j] = INF;
@@ -159,12 +138,14 @@ int main(int argc, char *argv[]) {
 
         for (int posicion_nodo = 0; posicion_nodo < 13; posicion_nodo++) {
             int numero_nodo = calle_actual[posicion_nodo]; // para legibilidad
+            nodos[calle_actual[posicion_nodo]]->inmuebles[0] = inmuebles_hori[posicion_nodo];
 
             // Funcion que unicamente asigna una string con el nombre de la calle al nodo actual.
             set_calle_hori_perteneciente(nodos, id_calle, numero_nodo, 0);
             // Este if es para no saltarse la asignacion de string en la ultima calle del array de calles horizontales
             if (posicion_nodo == 12) {
                 set_calle_hori_perteneciente(nodos, id_calle, calle_actual[posicion_nodo+1], 0);
+                nodos[calle_actual[posicion_nodo+1]]->inmuebles[0] = inmuebles_hori[posicion_nodo+1];
             }
             // Switch utilizado para manejar casos excepcion
             switch (id_calle) {
@@ -247,12 +228,14 @@ int main(int argc, char *argv[]) {
 
         for (int posicion_nodo = 0; posicion_nodo < 7; posicion_nodo++) {
             int numero_nodo = calle_actual[posicion_nodo]; // para legibilidad
+            nodos[calle_actual[posicion_nodo]]->inmuebles[1] = inmuebles_vert[posicion_nodo];
             
             // Funcion que unicamente asigna una string con el nombre de la calle al nodo actual.
             set_calle_vert_perteneciente(nodos, id_calle, numero_nodo, 1);
             // Este if es para no saltarse la asignacion de string en la ultima calle del array de calles verticales
             if (posicion_nodo == 6) {
                 set_calle_vert_perteneciente(nodos, id_calle, calle_actual[posicion_nodo+1], 1);
+                nodos[calle_actual[posicion_nodo+1]]->inmuebles[1] = inmuebles_vert[posicion_nodo+1];
             }
 
             switch (id_calle) {
@@ -295,8 +278,11 @@ int main(int argc, char *argv[]) {
     // Por ultimo, se agrega la diagonal
     crear_arco(mat_ady, nodos[81], nodos[66], 1.41F);
     strcpy(nodos[66]->calles_pertenecientes[2], "Pedro Aguirre Cerda");
+    nodos[66]->inmuebles[2] = inmuebles_diag[0];
     for (int i = 1; i < 3; i++) {
         crear_arco(mat_ady, nodos[nodos_diagonal[i]], nodos[nodos_diagonal[i+1]], 2);
+        nodos[nodos_diagonal[i]]->inmuebles[2] = inmuebles_diag[i];
+        nodos[nodos_diagonal[i+1]]->inmuebles[2] = inmuebles_diag[i+1];
         crear_arco(mat_ady, nodos[nodos_diagonal[i+1]], nodos[nodos_diagonal[i]], 2);
         strcpy(nodos[i]->calles_pertenecientes[2], "Pedro Aguirre Cerda");
         strcpy(nodos[i+1]->calles_pertenecientes[2], "Pedro Aguirre Cerda");
@@ -304,7 +290,7 @@ int main(int argc, char *argv[]) {
 
     /* Aqui termina la inicializacion de la matriz */
 
-    /* moví esto a la función print_dijkstra() que ocupo más abajo -Martín
+    /* moví esto a la función print_dijkstra() que ocupé más abajo -Martín
     int desde = 1;
     int hasta = 2;
     int pasandoPor = 104;
@@ -340,74 +326,41 @@ int main(int argc, char *argv[]) {
 
     if (argc == 3 || argc == 4) {
         for (int N = 1; N < argc; N++) {
-            int var = 0;
-            int* calle_a_iterar = NULL;
-            int tipo_calle;
             char nombre_calle_ingresado[32];
-            char string_num_inmueble[8];
+            int tipo_calle = -1;
 
             // Extraer toda la string antes del número de calle, o sea sólo el nombre de calle
             copiar_nombre_ingresado(nombre_calle_ingresado, argv[N]);
 
-            // Comparar la string extraida con los nombres de las calles Horizontales (Es case-sensitive)
-            for (int i = 0; i < 8; i++) {
-                if (calle_a_iterar != NULL) break;
-                if (strcmp(nombre_calle_ingresado, strings_CallesH[i]) == 0) {
-                    tipo_calle = HORIZONTAL;
-                    calle_a_iterar = CallesHorizontales[i];
+            int exit_flag = 0;
+            for (int i = 0; i < MAX_VERTICES; i++) {
+                for (int j = 0; j < 3; j++) {
+                    if (strcmp(nodos[i]->calles_pertenecientes[j],nombre_calle_ingresado) == 0) {
+                        tipo_calle = j;
+                        exit_flag = 1;
+                    }
                 }
+                if (exit_flag) break;
             }
-            // Comparar la string extraida con los nombres de las calles Verticales (Es case-sensitive)
-            for (int i = 0; i < 14; i++) {
-                if (calle_a_iterar != NULL) break;
-                if (strcmp(nombre_calle_ingresado, strings_CallesV[i]) == 0) {
-                    tipo_calle = VERTICAL;
-                    calle_a_iterar = CallesVerticales[i];
-                }
-            }
-            // Terminar el programa si el nombre ingresado no coincide con ninguna calle
-            if (calle_a_iterar == NULL) {
-                printf("Alguna de las calles está mal escrita\n");
+            if (exit_flag == 0) {
+                printf("error\n");
                 return -1;
             }
 
-            // Extraer el numero de inmueble ingresado
-            int inmueble_ingresado = extraer_numero_inmueble(argv[N]);
-            inmueble_ingresado = aproximar_inmueble(inmueble_ingresado, inmuebles_hori, tipo_calle);
-            
-            int indice_vertice_mapeado = -1;
-            switch(tipo_calle) {
-                case HORIZONTAL:
-                    for (int i = 0; i < 14; i++) {
-                        if (inmueble_ingresado == inmuebles_hori[i]) {
-                            indice_vertice_mapeado = i;
-                            verts_ruta[N-1] = calle_a_iterar[i];
-                            break;
-                        }
-                    }
+            // Aproxima el numnero de inmueble ingresado a un múltiplo de 100, si es que el número cae en la mitad de una calle y no en una intersección.
+            int inmueble_aprox = aproximar_inmueble(extraer_numero_inmueble(argv[N]), tipo_calle);
+            for (int i = 0; i < MAX_VERTICES; i++) {
+                if (strcmp(nodos[i]->calles_pertenecientes[tipo_calle], nombre_calle_ingresado) == 0 && inmueble_aprox == nodos[i]->inmuebles[tipo_calle]) {
+                    verts_ruta[N-1] = i;
                     break;
-                case VERTICAL:
-                    for (int i = 0; i < 8; i++) {
-                        if (inmueble_ingresado == inmuebles_vert[i]) {
-                            indice_vertice_mapeado = i;
-                            verts_ruta[N-1] = calle_a_iterar[i];
-                            break;
-                        }
-                    }
-                    break;
-                default:
-                    printf("Ha ocurrido un error al traducir el inmueble a nodo\n");
-                    return -1;
+                }
             }
-            
-            printf("Input %i: %s\n", N, argv[N]);
-            printf("Inmueble aproximado: %i\n", inmueble_ingresado);
-            printf("Primer indice de la calle: %i\n", calle_a_iterar[0]);
-            printf("Vertice de ruta: %i\n", verts_ruta[N-1]);
-            
+            printf("inmueble extraido: %i\n", extraer_numero_inmueble(argv[N]));
         }
+        for (int i = 0; i < MAX_VERTICES; i++) free(nodos[i]);
 
-        dijkstra_print(verts_ruta[0], verts_ruta[1], verts_ruta[2]);
+        printf("Ruta: %i -> %i, %i\n", verts_ruta[0], verts_ruta[1], verts_ruta[2]);
+        dijkstra_print(verts_ruta[0], verts_ruta[1], verts_ruta[2], argv);
     }
     else {
         printf("Numero incorrecto de argumentos.");
@@ -445,26 +398,10 @@ void set_calle_vert_perteneciente(Nodo* node_ar[MAX_VERTICES], int calle, int id
 
 void crear_arco(float mat_ady[MAX_VERTICES][MAX_VERTICES], Nodo* inicio, Nodo* final, float peso) {
     mat_ady[inicio->indice][final->indice] = peso;
-    inicio->link = final; // placeholder
-
 }
 
 void borrar_arco(float mat_ady[MAX_VERTICES][MAX_VERTICES], Nodo* inicio, Nodo* final) {
     mat_ady[inicio->indice][final->indice] = INF;
-    inicio->link = NULL; // placeholder
-}
-
-void print_peso_arco(float mat_ady[MAX_VERTICES][MAX_VERTICES], int inicio, int final) {
-    printf("%f", mat_ady[inicio][final]);
-}
-
-// para debugging, printea los pares ordenados/arcos que contienen a este vertice
-// es decir, aquellos arcos que empiezen o terminen en el vertice ingresado
-void print_arcos(float mat_ady[MAX_VERTICES][MAX_VERTICES], int id) {
-    for (int i = 0; i < MAX_VERTICES; i++) {
-        if (mat_ady[id][i] != INF) printf("(%i --(%f)--> %i),", id, mat_ady[id][i], i);
-        if (mat_ady[i][id] != INF) printf("(%i --(%f)--> %i),", i, mat_ady[i][id], id);
-    }
 }
 
 void eliminar_primer_elem(int* arr, int tamano) {
@@ -604,7 +541,7 @@ void copiar_nombre_ingresado(char destino[32], char* original) {
 int extraer_numero_inmueble(char* str) {
     int var_a = 0;
     int var_b = 0;
-    char str_num_inmueble[16];
+    char* str_num_inmueble = malloc(sizeof(char)*16);
     while (str[var_b] != '\0') {
         if (isdigit(str[var_b]) != 0) {
             str_num_inmueble[var_a] = str[var_b];
@@ -621,27 +558,30 @@ int extraer_numero_inmueble(char* str) {
             return -1;
         }
     }
-    return atoi(str_num_inmueble);
+    int returnval = atoi(str_num_inmueble);
+    // printf("inmueble extraido: %i\n", returnval);
+    free(str_num_inmueble);
+    return returnval;
 }
 
-int aproximar_inmueble(int num_inmueble, int* array_inmuebles, int tipo_calle) {
+int aproximar_inmueble(int num_inmueble, int tipo_calle) {
     int min_dist = (int)INFINITY;
     int aproximacion = -1;
 
     switch(tipo_calle) {
         case HORIZONTAL:
             for (int i = 0; i < 14; i++) {
-                if (abs(num_inmueble-(i*100)) < min_dist) {
-                    min_dist = abs(num_inmueble-(i*100));
-                    aproximacion = i*100;
+                if (abs(num_inmueble-inmuebles_hori[i]) < min_dist) {
+                    min_dist = abs(num_inmueble-inmuebles_hori[i]);
+                    aproximacion = inmuebles_hori[i];
                 }
             }
             break;
         case VERTICAL:
             for (int i = 0; i < 8; i++) {
-                if (abs(num_inmueble-(i*100)) < min_dist) {
-                    min_dist = abs(num_inmueble-(i*100));
-                    aproximacion = i*100;
+                if (abs(num_inmueble-inmuebles_vert[i]) < min_dist) {
+                    min_dist = abs(num_inmueble-inmuebles_vert[i]);
+                    aproximacion = inmuebles_vert[i];
                 }
             }
             break;
@@ -653,31 +593,41 @@ int aproximar_inmueble(int num_inmueble, int* array_inmuebles, int tipo_calle) {
             return -1;
     }
 
-    if (aproximacion == -1 || min_dist == -999) {
+    if (aproximacion == -1 || min_dist == (int)INFINITY) {
         printf("Algo raro ocurrió al aproximar el inmueble\n");
     }
+    // printf("inmueble aproximado a: %i\n", aproximacion);
     return aproximacion;
 }
 
 // crédito a Bastián por esta función
-void dijkstra_print(int desde, int hasta, int pasandoPor) {
+void dijkstra_print(int desde, int hasta, int pasandoPor, char* callesargv[]) {
     if (pasandoPor == -1) {
-        printf("Camino mas corto desde %d a %d: ", desde, hasta);  
+        printf("Camino mas corto desde %s a %s: ", callesargv[1], callesargv[2]);  
         int* recorridoMasCorto = dijkstra(desde, hasta);
         for (int i = 0; i < MAX_VERTICES; i++) {
             if (recorridoMasCorto[i] != -1){
-                printf("%d ", recorridoMasCorto[i]);
+                printf("%d", recorridoMasCorto[i]);
             } else break;
+            if (recorridoMasCorto[i] != hasta) {
+                printf(" -> ");
+            }
         }
     }
     else {
-        printf("\nCamino mas corto desde %d a %d pasando por %d: ", desde, hasta, pasandoPor);  
+        printf("\nCamino mas corto desde %s a %s pasando por %s: ", callesargv[1], callesargv[2], callesargv[3]);  
         int* recorridoMasCorto2 = dijkstraCondicionado(desde, hasta, pasandoPor);
         for (int i = 0; i < MAX_VERTICES; i++) {
             if (recorridoMasCorto2[i] != -1){
-                printf("%d ", recorridoMasCorto2[i]);
+                printf("%d", recorridoMasCorto2[i]);
             } else break;
+            if (recorridoMasCorto2[i] != hasta) {
+                printf(" -> ");
+            }
         }
     }
     printf("\n");
 }
+
+// printf("%s-%s", nodos[recorridoMasCorto[i]]->calles_pertenecientes[0], nodos[recorridoMasCorto[i]]->calles_pertenecientes[1]);
+// printf("%s-%s", nodos[recorridoMasCorto2[i]]->calles_pertenecientes[0], nodos[recorridoMasCorto2[i]]->calles_pertenecientes[1]);
