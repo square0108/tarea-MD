@@ -21,19 +21,6 @@ int nodos_diagonal[] = {66,81,96,111};
 // Matriz de adyacencia
 float mat_ady[MAX_VERTICES][MAX_VERTICES];
 
-// Enums de las calles
-enum calles_horizontales {
-    LOS_CARRERA,MAIPU,FREIRE,BARROS_ARANA,OHIGGINS,SAN_MARTIN,COCHRANE,CHACABUCO
-};
-
-enum calles_verticales {
-    ARTURO_PRAT,SERRANO,SALAS,ANGOL,LINCOYAN,RENGO,CAUPOLICAN,ANIBAL_PINTO,COLOCOLO,CASTELLON,TUCAPEL,OROMPELLO,ONGOLMO,PAICAVI
-};
-
-enum tipo_calle {
-    HORIZONTAL, VERTICAL, DIAGONAL
-};
-
 // Arreglos con los nombres de las calles (para asignar strings a los nodos)
 char* strings_CallesH[] = {"Los Carrera","Maipu","Freire","Barros Arana","O'Higgins","San Martin","Cochrane","Chacabuco"};
 char* strings_CallesV[] = {"Arturo Prat", "Serrano", "Salas", "Angol", "Lincoyan", "Rengo", "Caupolican", "Anibal Pinto", "Colo colo", "Castellon", "Tucapel", "Orompello", "Ongolmo", "Paicavi"};
@@ -55,23 +42,36 @@ typedef struct nodo
 
 Nodo* nodos[MAX_VERTICES];
 
+enum calles_horizontales {
+    LOS_CARRERA,MAIPU,FREIRE,BARROS_ARANA,OHIGGINS,SAN_MARTIN,COCHRANE,CHACABUCO
+};
+
+enum calles_verticales {
+    ARTURO_PRAT,SERRANO,SALAS,ANGOL,LINCOYAN,RENGO,CAUPOLICAN,ANIBAL_PINTO,COLOCOLO,CASTELLON,TUCAPEL,OROMPELLO,ONGOLMO,PAICAVI
+};
+
+enum tipo_calle {
+    HORIZONTAL, VERTICAL, DIAGONAL
+};
+
 /* **************************** *
  * Prototipos
 ******************************* */
 
+// Funciones para construir el grafo
 void crear_arco(float mat_ady[MAX_VERTICES][MAX_VERTICES], Nodo* inicio, Nodo* final, float peso);
 void borrar_arco(float mat_ady[MAX_VERTICES][MAX_VERTICES], Nodo* inicio, Nodo* final);
 void set_calle_vert_perteneciente(Nodo* node_ar[MAX_VERTICES], int calle, int id_vertice, int id_StrArrayStructMem);
 void set_calle_hori_perteneciente(Nodo* node_ar[MAX_VERTICES], int calle, int id_vertice, int id_StrArrayStructMem);
-void numrange(int* array, int start, int end);
-int* elems_plus_one(int arr[8]);
 
+// Funciones dijkstra
 void eliminar_primer_elem(int* arr, int tamano);
 int* dijkstra(int inicio, int final);
 int* dijkstraCondicionado(int inicio, int final, int pasandoPor);
 void reverse(int* arr, int n);
 void dijkstra_print(int desde, int hasta, int pasandoPor, char* argv[]);
 
+// Funciones para verificacion de input
 void copiar_nombre_ingresado(char destino[32], char* original);
 int extraer_numero_inmueble(char* str);
 int aproximar_inmueble(int num_inmueble, int tipo_calle);
@@ -81,7 +81,6 @@ int aproximar_inmueble(int num_inmueble, int tipo_calle);
 ******************************* */
 
 int main(int argc, char *argv[]) {
-
     // inicializacion de todas las distancias a infinito (inicialmente ningun nodo conectado)
     for (int i = 0; i < MAX_VERTICES; i++) {
         for (int j = 0; j < MAX_VERTICES; j++) {
@@ -90,23 +89,25 @@ int main(int argc, char *argv[]) {
     }
 
     // calles "horizontales", todas son largo 14
-    int Carrera[14], Maipu[14], Freire[14], BarrosArana[14], OHiggins[14], SanMartin[14], Cochrane[14], Chacabuco[14];
-
-    int* CallesHorizontales[] = {Carrera, Maipu, Freire, BarrosArana, OHiggins, SanMartin, Cochrane, Chacabuco};
     int start_index[] = {0,14,28,42,56,70,84,98};
+    int Carrera[14], Maipu[14], Freire[14], BarrosArana[14], OHiggins[14], SanMartin[14], Cochrane[14], Chacabuco[14];
+    int* CallesHorizontales[] = {Carrera, Maipu, Freire, BarrosArana, OHiggins, SanMartin, Cochrane, Chacabuco};
+
     for (int i = 0; i < 8; i++) {
-        // esta funcion solo inicializa los valores de cada arreglo a numeros en un rango, incluyendo inicio y final del rango
-        numrange(CallesHorizontales[i], start_index[i], start_index[i]+13);
+        for (int j = 0; j < 14; j++) {
+            CallesHorizontales[i][j] = start_index[i] + j;
+        }
     }
 
     // calles "verticales", todas son largo 8
-    int Prat[] = {0,14,28,42,56,70,84,98}; 
-    int Serrano[8], Salas[8],  Angol[8],  Lincoyan[8], Rengo[8], Caupolican[8], AnibalPinto[8], ColoColo[8], Castellon[8], Tucapel[8], Orompello[8], Ongolmo[8], Paicavi[8];
-
+    int Prat[8], Serrano[8], Salas[8],  Angol[8],  Lincoyan[8], Rengo[8], Caupolican[8], AnibalPinto[8], ColoColo[8], Castellon[8], Tucapel[8], Orompello[8], Ongolmo[8], Paicavi[8];
     int* CallesVerticales[] = {Prat, Serrano, Salas, Angol, Lincoyan, Rengo, Caupolican, AnibalPinto, ColoColo, Castellon, Tucapel, Orompello, Ongolmo, Paicavi};
-    for (int i = 1; i < 14; i++) {
-        // los índices de cada calle vertical son los mismos índices de la calle vertical anterior a esta, pero +1
-        CallesVerticales[i] = elems_plus_one(CallesVerticales[i-1]);
+    
+    // los índices de cada calle vertical son los mismos índices de la calle vertical anterior a esta, pero +1
+    for (int i = 0; i < 14; i++) {
+        for (int j = 0; j < 8; j++) {
+            CallesVerticales[i][j] = start_index[j] + i;
+        }
     }
 
     // inicializacion de los nodos, los dejé como struct en caso de tener que usarlos asi en algun momento?
@@ -123,13 +124,11 @@ int main(int argc, char *argv[]) {
         }
     }
 
-
     /* Se conectan los vertices calle por calle mediante un "patrón" donde se crean arcos todos en la misma dirección entre cada par de vertices adyacentes de una calle, luego en direccion opuesta en la calle siguiente, etc...
 
     1. Las calles del arreglo CallesHorizontales[] con índice PAR en este arreglo, van de derecha a izquierda, las IMPARES de izquierda a derecha. (salvo por las avenidas en cada extremo)
     2. Las calles del arreglo CallesVerticales[] con índice PAR en este arreglo, van de abajo a arriba, las IMPARES de arriba a abajo. (salvo por Paicaví)
     3. Los casos que se salgan del patrón son manejados en un switch dentro de cada for-loop.
-    
     */
 
     // primero, todas las CALLES HORIZONTALES
@@ -348,12 +347,6 @@ int main(int argc, char *argv[]) {
             }
 
             // Aproxima el numnero de inmueble ingresado a un múltiplo de 100, si es que el número cae en la mitad de una calle y no en una intersección.
-            char safe_string[32];
-            safe_string[0] = '\0';
-            char string_cpy_inmuebles[32];
-            string_cpy_inmuebles[0] = '\0';
-
-            
 
             int inmueble_aprox = aproximar_inmueble(extraer_numero_inmueble(argv[N]), tipo_calle);
             for (int i = 0; i < MAX_VERTICES; i++) {
@@ -362,7 +355,7 @@ int main(int argc, char *argv[]) {
                     break;
                 }
             }
-            printf("inmueble extraido: %i\n", extraer_numero_inmueble(argv[N]));
+            printf("input: %s %i, aproximado a: %s %i (Nodo: %i)\n", nombre_calle_ingresado, extraer_numero_inmueble(argv[N]), nombre_calle_ingresado, inmueble_aprox, verts_ruta[N-1]);
         }
         for (int i = 0; i < MAX_VERTICES; i++) free(nodos[i]);
 
@@ -374,25 +367,6 @@ int main(int argc, char *argv[]) {
         exit;
     }
   
-}
-
-// devuelve un arreglo con secuencia de numeros start-end, incluyendo el inicio y final dentro del arreglo
-void numrange(int* array, int start, int end) {
-    int value = start;
-    for (int i = 0; i <= end-start; i++) {
-        array[i] = value;
-        value++;
-    }
-}
-
-// devuelve un arreglo, que es igual al arreglo de entrada, pero sumando 1 a todos sus valores
-int* elems_plus_one(int arr[8]) {
-    int* ray;
-    ray = malloc(sizeof(int)*8);
-    for (int i = 0; i < 8; i++) {
-        ray[i] = arr[i] + 1;
-    }
-    return ray;
 }
 
 void set_calle_hori_perteneciente(Nodo* node_ar[MAX_VERTICES], int calle, int id_vertice, int id_StrArrayStructMem) {
