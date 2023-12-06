@@ -5,7 +5,7 @@
 #include <math.h>
 
 /* **************************** *
- * Constantes
+ * Constantes y variables globales
 ******************************* */
 
 // Numero total de vertices en el grafo del Centro Concepcion
@@ -252,8 +252,8 @@ int main(int argc, char *argv[]) {
             crear_arco(mat_ady, nodos[81], nodos[66], 1.41F);
         }
         else if (i < 3) {
-            crear_arco(mat_ady, nodos[nodos_diagonal[i]], nodos[nodos_diagonal[i+1]], 2);
-            crear_arco(mat_ady, nodos[nodos_diagonal[i+1]], nodos[nodos_diagonal[i]], 2);
+            crear_arco(mat_ady, nodos[nodos_diagonal[i]], nodos[nodos_diagonal[i+1]], 1.41F);
+            crear_arco(mat_ady, nodos[nodos_diagonal[i+1]], nodos[nodos_diagonal[i]], 1.41F);
         }
         strcpy(nodos[nodos_diagonal[i]]->calles_pertenecientes[2], "Pedro Aguirre Cerda");
         nodos[nodos_diagonal[i]]->inmuebles[2] = inmuebles_diag[i];
@@ -334,10 +334,11 @@ int main(int argc, char *argv[]) {
             printf("input: %s %i, aproximado a: %s %i (Nodo: %i)\n", nombre_calle_ingresado, extraer_numero_inmueble(argv[N]), nombre_calle_ingresado, inmueble_aprox, verts_ruta[N-1]);
         }
 
-        for (int i = 0; i < MAX_VERTICES; i++) free(nodos[i]);
-
-        printf("Ruta: %i -> %i, %i\n\n", verts_ruta[0], verts_ruta[1], verts_ruta[2]);
+        if (verts_ruta[2] != -1) printf("Ruta: verice %i hasta vertice %i, pasando por %i\n\n", verts_ruta[0], verts_ruta[1], verts_ruta[2]);
+        else printf("Ruta: vertice %i hasta vertice %i\n\n", verts_ruta[0], verts_ruta[1]);
         dijkstra_print(verts_ruta[0], verts_ruta[1], verts_ruta[2], argv);
+
+        for (int i = 0; i < MAX_VERTICES; i++) free(nodos[i]);
     }
     else {
         printf("Numero incorrecto de argumentos.");
@@ -570,6 +571,7 @@ int calcular_distancia(int vertices_input[3], int* recorrido_dijkstra) {
 
 // crédito a Bastián por esta función
 void dijkstra_print(int desde, int hasta, int pasandoPor, char* callesargv[]) {
+    float distancia_recorrida = 0;
     if (pasandoPor == -1) {
         printf("Camino mas corto desde %s a %s: \n", callesargv[1], callesargv[2]);  
         int* recorridoMasCorto = dijkstra(desde, hasta);
@@ -578,6 +580,7 @@ void dijkstra_print(int desde, int hasta, int pasandoPor, char* callesargv[]) {
                 printf("%d", recorridoMasCorto[i]);
             } else break;
             if (recorridoMasCorto[i] != hasta) {
+                distancia_recorrida += mat_ady[recorridoMasCorto[i]][recorridoMasCorto[i+1]];
                 printf(" -> ");
             }
         }
@@ -590,10 +593,12 @@ void dijkstra_print(int desde, int hasta, int pasandoPor, char* callesargv[]) {
                 printf("%d", recorridoMasCorto2[i]);
             } else break;
             if (recorridoMasCorto2[i] != hasta) {
+                distancia_recorrida += mat_ady[recorridoMasCorto2[i]][recorridoMasCorto2[i+1]];
                 printf(" -> ");
             }
         }
     }
+    printf("\nDistancia recorrida: %i metros", (int)(distancia_recorrida*100));
     printf("\n");
 }
 
