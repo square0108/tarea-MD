@@ -25,7 +25,7 @@ float mat_ady[MAX_VERTICES][MAX_VERTICES];
 char* strings_CallesH[] = {"Los Carrera","Maipu","Freire","Barros Arana","O'Higgins","San Martin","Cochrane","Chacabuco"};
 char* strings_CallesV[] = {"Arturo Prat", "Serrano", "Salas", "Angol", "Lincoyan", "Rengo", "Caupolican", "Anibal Pinto", "Colo colo", "Castellon", "Tucapel", "Orompello", "Ongolmo", "Paicavi"};
 
-int inmuebles_hori[] = {0,100,200,300,400,500,600,700,800,900,1000,1100,1200,1300};
+int inmuebles_hori[] = {0,100,200,300,400,500,600,700,800,900,1000,1100,1200,1299};
 int inmuebles_vert[] = {799,700,600,500,400,300,200,100};
 int inmuebles_diag[] = {399,300,200,100};
 
@@ -75,7 +75,6 @@ void dijkstra_print(int desde, int hasta, int pasandoPor, char* argv[]);
 void copiar_nombre_ingresado(char destino[32], char* original);
 int extraer_numero_inmueble(char* str);
 int aproximar_inmueble(int num_inmueble, int tipo_calle);
-int calcular_distancia(int vertices_input[3], int* recorrido_dijkstra);
 
 /* **************************** *
  * Funciones
@@ -141,7 +140,7 @@ int main(int argc, char *argv[]) {
 
             // Funcion que unicamente asigna una string con el nombre de la calle al nodo actual.
             set_calle_hori_perteneciente(nodos, id_calle, numero_nodo, 0);
-            // Este if es para no saltarse la asignacion de string en la ultima calle del array de calles horizontales
+            // Este if es para no saltarse la asignacion de la ultima CalleHorizontal (el for loop llega hasta 12)
             if (posicion_nodo == 12) {
                 set_calle_hori_perteneciente(nodos, id_calle, calle_actual[posicion_nodo+1], 0);
                 nodos[calle_actual[posicion_nodo+1]]->inmuebles[0] = inmuebles_hori[posicion_nodo+1];
@@ -334,7 +333,7 @@ int main(int argc, char *argv[]) {
             printf("input: %s %i, aproximado a: %s %i (Nodo: %i)\n", nombre_calle_ingresado, extraer_numero_inmueble(argv[N]), nombre_calle_ingresado, inmueble_aprox, verts_ruta[N-1]);
         }
 
-        if (verts_ruta[2] != -1) printf("Ruta: verice %i hasta vertice %i, pasando por %i\n\n", verts_ruta[0], verts_ruta[1], verts_ruta[2]);
+        if (verts_ruta[2] != -1) printf("Ruta: vertice %i hasta vertice %i, pasando por %i\n\n", verts_ruta[0], verts_ruta[1], verts_ruta[2]);
         else printf("Ruta: vertice %i hasta vertice %i\n\n", verts_ruta[0], verts_ruta[1]);
         dijkstra_print(verts_ruta[0], verts_ruta[1], verts_ruta[2], argv);
 
@@ -563,12 +562,6 @@ int aproximar_inmueble(int num_inmueble, int tipo_calle) {
     return aproximacion;
 }
 
-int calcular_distancia(int vertices_input[3], int* recorrido_dijkstra) {
-     
-
-    return 0;
-}
-
 // crédito a Bastián por esta función
 void dijkstra_print(int desde, int hasta, int pasandoPor, char* callesargv[]) {
     float distancia_recorrida = 0;
@@ -577,7 +570,7 @@ void dijkstra_print(int desde, int hasta, int pasandoPor, char* callesargv[]) {
         int* recorridoMasCorto = dijkstra(desde, hasta);
         for (int i = 0; i < MAX_VERTICES; i++) {
             if (recorridoMasCorto[i] != -1){
-                printf("%d", recorridoMasCorto[i]);
+                printf("%s-%s", nodos[recorridoMasCorto[i]]->calles_pertenecientes[0], nodos[recorridoMasCorto[i]]->calles_pertenecientes[1]);
             } else break;
             if (recorridoMasCorto[i] != hasta) {
                 distancia_recorrida += mat_ady[recorridoMasCorto[i]][recorridoMasCorto[i+1]];
@@ -590,7 +583,7 @@ void dijkstra_print(int desde, int hasta, int pasandoPor, char* callesargv[]) {
         int* recorridoMasCorto2 = dijkstraCondicionado(desde, hasta, pasandoPor);
         for (int i = 0; i < MAX_VERTICES; i++) {
             if (recorridoMasCorto2[i] != -1){
-                printf("%d", recorridoMasCorto2[i]);
+                printf("%s-%s", nodos[recorridoMasCorto2[i]]->calles_pertenecientes[0], nodos[recorridoMasCorto2[i]]->calles_pertenecientes[1]);
             } else break;
             if (recorridoMasCorto2[i] != hasta) {
                 distancia_recorrida += mat_ady[recorridoMasCorto2[i]][recorridoMasCorto2[i+1]];
@@ -602,5 +595,7 @@ void dijkstra_print(int desde, int hasta, int pasandoPor, char* callesargv[]) {
     printf("\n");
 }
 
+// si solo se desean ver los nodos, reemplazar el printf de dijkstra_print() con printf("%d", recorridoMasCorto[i]);
+// mientras que el siguiente es para solo printear las intersecciones de calles en lugar de los nodos:
 // printf("%s-%s", nodos[recorridoMasCorto[i]]->calles_pertenecientes[0], nodos[recorridoMasCorto[i]]->calles_pertenecientes[1]);
 // printf("%s-%s", nodos[recorridoMasCorto2[i]]->calles_pertenecientes[0], nodos[recorridoMasCorto2[i]]->calles_pertenecientes[1]);
